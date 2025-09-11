@@ -1,0 +1,120 @@
+#pragma once
+
+#include <raylib.h>
+#include <vector>
+#include <span>
+#include <functional>
+
+
+class Canvas
+{
+public:
+		Vector2 origin{ 0,0 };
+
+		Canvas() = default;
+		explicit Canvas(Vector2 origin)
+				: origin(origin)
+		{
+
+		}
+
+		// Helper methods for converting a point to a local/screen point
+		Vector2 ToScreen(Vector2 p) const { return Vector2{ p.x + origin.x, p.y + origin.y }; }
+		Vector2 ToLocal(Vector2 p) const { return Vector2{ p.x - origin.x, p.y - origin.y }; }
+
+		Vector2 MouseLocal() const { return ToLocal(GetMousePosition()); }
+
+
+		// Drawing wrappers (add more as needed):
+		void FillColor(Color color) const;
+		void DrawRect(Rectangle rect, Color color) const;
+		void DrawRectLines(Rectangle rect, int thick, Color color) const;
+		void DrawTextLocal(const char* txt, Vector2 localPos, int fontSize, Color color) const;
+};
+
+
+class ScopedClip
+{
+public:
+		ScopedClip(const Rectangle& rect);
+		~ScopedClip()
+		{
+				EndScissorMode();
+		}
+
+		// Disallow copying/moving so we don't run EndScissorMode consecutively - ScopedClip should always be temporary!
+		ScopedClip(const ScopedClip& other) = delete;
+		ScopedClip& operator=(const ScopedClip&) = delete;
+		ScopedClip(ScopedClip&& other) = delete;
+		ScopedClip& operator=(ScopedClip&&) = delete;
+};
+
+
+class Panel
+{
+public:
+		Rectangle Rect;
+		std::function<void(Canvas&)> OnDraw;
+		std::function<void(Canvas&)> OnUpdate;
+
+		Panel(Rectangle rect,
+				std::function<void(Canvas&)> OnDraw,
+				std::function<void(Canvas&)> OnUpdate = {})
+				: Rect(rect), OnDraw(OnDraw), OnUpdate(OnUpdate)
+		{
+		}
+
+		Panel(Panel&& other) noexcept = default;
+
+		bool Contains(Vector2 screenPt) const
+		{
+				return CheckCollisionPointRec(screenPt, Rect);
+		}
+
+		Vector2 MouseLocal() const
+		{
+				return { GetMouseX() - Rect.x, GetMouseY() - Rect.y };
+		}
+
+		void Draw();
+		void Update();
+
+private:
+		struct PanelContext // Helper struct
+		{
+				Canvas canvas;         // origin-aware drawing & coords
+				Rectangle rect;        // panel rect
+				bool hovered;          // maybe useful
+				Vector2 mouseLocal;    // cached convenience
+
+				void refresh(const Panel& panel);
+		};
+
+		PanelContext m_Context{};
+};
+
+class PanelManager
+{
+public:
+		PanelManager() = default;
+
+		Panel& AddPanel(Rectangle rect,
+				std::function<void(Canvas&)> OnDraw,
+				std::function<void(Canvas&)> OnUpdate = {});
+
+		Panel& AddPanel(Panel&& panel);
+
+		void DrawAll();
+		void UpdateAll();
+
+		// NOTE: std::span instances are invalid the moment m_Panels is changed in any way
+		const std::span<Panel> GetPanels()& { return m_Panels; }
+		const std::span<const Panel> GetPanels() const& { return m_Panels; } // for const PanelManager
+
+		// forbid calling on rvalues - std::span will be invalid anyways
+		const std::span<Panel> GetPanels() && = delete;
+		const std::span<const Panel> GetPanels() const&& = delete;
+
+private:
+		std::vector<Panel> m_Panels; // ownership
+};
