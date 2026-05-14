@@ -28,7 +28,7 @@ public:
 		// Drawing wrappers (add more as needed):
 		void FillColor(Color color) const;
 		void DrawCircle(Vector2 center, float radius, Color color) const;
-		void DrawCircleLines(Vector2 center, float radius, int thick, Color color) const;
+		void DrawCircleLines(Vector2 center, float radius, Color color) const;
 		void DrawRect(Rectangle rect, Color color) const;
 		void DrawRectLines(Rectangle rect, int thick, Color color) const;
 		void DrawTextLocal(const char* txt, Vector2 localPos, int fontSize, Color color) const;
@@ -56,14 +56,49 @@ public:
 
 class Panel
 {
+
+// Helper structs
+private:
+		struct PanelContext
+		{
+				Canvas canvas;         // origin-aware drawing & coords
+				Rectangle rect;        // panel rect
+				bool hovered;          // maybe useful
+				Vector2 mouseLocal;    // cached convenience
+
+				void refresh(const Panel& panel);
+		};
+
+		PanelContext m_Context{};
+public:
+		struct UpdateContext
+		{
+				float dt;            // delta time for smooth movement
+				Vector2 mouseLocal;  // local mouse position
+				bool hovered;        // is mouse over this panel?
+		};
+
+		/// @brief Logic function called every frame. 
+		/// @param ctx Contains deltaTime, mouse position, and hover state.
+		using UpdateFunc = std::function<void(UpdateContext&)>;
+
+		/// @brief Drawing function called every frame. 
+		/// @param canvas A helper for drawing with the panel's origin as (0,0).
+		using DrawFunc = std::function<void(Canvas&)>;
+
+private:
+		friend class PanelManager; // so PanelManager can call private Draw/Update
+		DrawFunc OnDraw;
+		UpdateFunc OnUpdate;
+
+		void Draw();
+		void Update();
 public:
 		Rectangle Rect;
-		std::function<void(Canvas&)> OnDraw;
-		std::function<void(Canvas&)> OnUpdate;
 
 		Panel(Rectangle rect,
-				std::function<void(Canvas&)> OnDraw,
-				std::function<void(Canvas&)> OnUpdate = {})
+				DrawFunc OnDraw,
+				UpdateFunc OnUpdate = {})
 				: Rect(rect), OnDraw(OnDraw), OnUpdate(OnUpdate)
 		{
 		}
@@ -79,32 +114,17 @@ public:
 		{
 				return { GetMouseX() - Rect.x, GetMouseY() - Rect.y };
 		}
-
-		void Draw();
-		void Update();
-
-private:
-		struct PanelContext // Helper struct
-		{
-				Canvas canvas;         // origin-aware drawing & coords
-				Rectangle rect;        // panel rect
-				bool hovered;          // maybe useful
-				Vector2 mouseLocal;    // cached convenience
-
-				void refresh(const Panel& panel);
-		};
-
-		PanelContext m_Context{};
 };
 
 class PanelManager
 {
 public:
+
 		PanelManager() = default;
 
 		Panel& AddPanel(Rectangle rect,
-				std::function<void(Canvas&)> OnDraw,
-				std::function<void(Canvas&)> OnUpdate = {});
+				Panel::DrawFunc OnDraw,
+				Panel::UpdateFunc OnUpdate = {});
 
 		Panel& AddPanel(Panel&& panel);
 

@@ -15,7 +15,7 @@ void Canvas::DrawCircle(Vector2 center, float radius, Color color) const
 		DrawCircleV(c, radius, color);
 }
 
-void Canvas::DrawCircleLines(Vector2 center, float radius, int thick, Color color) const
+void Canvas::DrawCircleLines(Vector2 center, float radius, Color color) const
 {
 		Vector2 c = ToScreen(center);
 		::DrawCircleLines(c.x, c.y, radius, color);
@@ -58,7 +58,6 @@ ScopedClip::ScopedClip(const Rectangle& rect)
 void Panel::Draw()
 {
 		ScopedClip clip(Rect);
-		m_Context.refresh(*this);
 
 		if (OnDraw) {
 				OnDraw(m_Context.canvas);
@@ -67,11 +66,15 @@ void Panel::Draw()
 
 void Panel::Update()
 {
-		ScopedClip clip(Rect);
 		m_Context.refresh(*this);
+		UpdateContext ctx {
+				GetFrameTime(), // raylib's delta time
+				m_Context.mouseLocal,
+				m_Context.hovered
+		};
 
 		if (OnUpdate) {
-				OnUpdate(m_Context.canvas);
+				OnUpdate(ctx);
 		}
 }
 
@@ -84,8 +87,8 @@ void Panel::PanelContext::refresh(const Panel& panel)
 }
 
 Panel& PanelManager::AddPanel(Rectangle rect,
-		std::function<void(Canvas&)> OnDraw,
-		std::function<void(Canvas&)> OnUpdate)
+		Panel::DrawFunc OnDraw,
+		Panel::UpdateFunc OnUpdate)
 {
 		this->m_Panels.emplace_back(rect, OnDraw, OnUpdate);
 		return this->m_Panels.back();

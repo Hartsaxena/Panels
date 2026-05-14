@@ -21,7 +21,7 @@ int main()
 						c.DrawRectLines({ 0,0,300,200 }, 2, RAYWHITE);
 						c.DrawTextLocal("Hello, Panel!", { 12,12 }, 20, RAYWHITE);
 				},
-				[](Canvas& c) {
+				[](Panel::UpdateContext context) {
 						// handle input using c.MouseLocal() if needed
 				});
 
@@ -30,9 +30,6 @@ int main()
 						c.FillColor(DARKGRAY);
 						c.DrawRectLines({ 0,0,300,200 }, 2, RAYWHITE);
 						c.DrawTextLocal("Shut up, Panel.", { 12,12 }, 20, RAYWHITE);
-				},
-				[](Canvas& c) {
-						// handle input using c.MouseLocal() if needed
 				});
 
 		// game loop
