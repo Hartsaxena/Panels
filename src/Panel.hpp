@@ -27,6 +27,8 @@ public:
 
 		// Drawing wrappers (add more as needed):
 		void FillColor(Color color) const;
+		void DrawCircle(Vector2 center, float radius, Color color) const;
+		void DrawCircleLines(Vector2 center, float radius, int thick, Color color) const;
 		void DrawRect(Rectangle rect, Color color) const;
 		void DrawRectLines(Rectangle rect, int thick, Color color) const;
 		void DrawTextLocal(const char* txt, Vector2 localPos, int fontSize, Color color) const;
@@ -35,11 +37,13 @@ public:
 
 class ScopedClip
 {
+		static inline bool s_isActive = false;
 public:
 		ScopedClip(const Rectangle& rect);
 		~ScopedClip()
 		{
 				EndScissorMode();
+				s_isActive = false;
 		}
 
 		// Disallow copying/moving so we don't run EndScissorMode consecutively - ScopedClip should always be temporary!

@@ -9,6 +9,18 @@ void Canvas::FillColor(Color color) const
 		ClearBackground(color);
 }
 
+void Canvas::DrawCircle(Vector2 center, float radius, Color color) const
+{
+		Vector2 c = ToScreen(center);
+		DrawCircleV(c, radius, color);
+}
+
+void Canvas::DrawCircleLines(Vector2 center, float radius, int thick, Color color) const
+{
+		Vector2 c = ToScreen(center);
+		::DrawCircleLines(c.x, c.y, radius, color);
+}
+
 void Canvas::DrawRect(Rectangle rect, Color color) const
 {
 		Rectangle rr = { rect.x + origin.x, rect.y + origin.y, rect.width, rect.height };
@@ -30,6 +42,11 @@ void Canvas::DrawTextLocal(const char* txt, Vector2 localPos, int fontSize, Colo
 
 ScopedClip::ScopedClip(const Rectangle& rect)
 {
+		if (s_isActive) {
+				throw std::runtime_error("Nested ScopedClip instances are not allowed!");
+		}
+		s_isActive = true;
+
 		int x = static_cast<int>(rect.x);
 		int y = static_cast<int>(rect.y);
 		int width = static_cast<int>(rect.width);
