@@ -122,6 +122,15 @@ Panel& PanelManager::AddPanel(const std::string& id, Panel&& panel)
 		return it->second;
 }
 
+bool PanelManager::RemovePanel(const std::string& id)
+{
+		if (m_Panels.contains(id)) {
+				m_PanelsToRemove.push_back(id);
+				return true;
+		}
+		return false;
+}
+
 void PanelManager::DrawAll()
 {
 		for (auto& [id, panel] : m_Panels) {
@@ -133,5 +142,9 @@ void PanelManager::UpdateAll()
 {
 		for (auto& [id, panel] : m_Panels) {
 				panel.Update();
+		}
+
+		for (std::string& id : m_PanelsToRemove) {
+				m_Panels.erase(id);
 		}
 }

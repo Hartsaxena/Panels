@@ -123,6 +123,7 @@ class PanelManager
 {
 private:
 		std::unordered_map<std::string, Panel> m_Panels;
+		std::vector<std::string> m_PanelsToRemove;
 
 public:
 
@@ -138,7 +139,7 @@ public:
 				Panel::UpdateFunc OnUpdate = {});
 
 		Panel& AddPanel(const std::string& id, Panel&& panel);
-		bool RemovePanel(const std::string& id) { return m_Panels.erase(id) > 0; }
+		bool RemovePanel(const std::string& id);
 
 		void DrawAll();
 		void UpdateAll();

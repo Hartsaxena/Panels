@@ -15,7 +15,8 @@ int main()
 		}
 
 		PanelManager panels;
-		panels.AddPanel({ 50, 50, 300, 200 },
+		panels.AddPanel("Button Panel",
+				{ 50, 50, 300, 200 },
 				[](Canvas& c) {
 						c.FillColor(DARKGRAY);
 						c.DrawRectLines({ 0, 0, 300, 200 }, 2, RAYWHITE);
@@ -32,6 +33,20 @@ int main()
 						c.FillColor(DARKGRAY);
 						c.DrawRectLines({ 0, 0, 300, 200 }, 2, RAYWHITE);
 						c.DrawTextLocal("Shut up, Panel.", { 12,12 }, 20, RAYWHITE);
+				});
+
+		panels.AddPanel("Destroyable Panel",
+				{ 750, 50, 300, 200 },
+				[](Canvas& c) {
+						c.FillColor(DARKGRAY);
+						c.DrawRectLines({ 0, 0, 300, 200 }, 2, RAYWHITE);
+						c.DrawTextLocal("I have nothing to say.", { 12,12 }, 20, RAYWHITE);
+				},
+				[&panels](Panel::UpdateContext context) {
+						if (context.hovered && context.mouseButtons[0]) {
+								std::cout << "Destroying panel...\n";
+								panels.RemovePanel("Destroyable Panel");
+						}
 				});
 
 		// game loop
