@@ -15,20 +15,22 @@ int main()
 		}
 
 		PanelManager panels;
-		panels.AddPanel({ 50,50, 300,200 },
+		panels.AddPanel({ 50, 50, 300, 200 },
 				[](Canvas& c) {
 						c.FillColor(DARKGRAY);
-						c.DrawRectLines({ 0,0,300,200 }, 2, RAYWHITE);
+						c.DrawRectLines({ 0, 0, 300, 200 }, 2, RAYWHITE);
 						c.DrawTextLocal("Hello, Panel!", { 12,12 }, 20, RAYWHITE);
 				},
 				[](Panel::UpdateContext context) {
-						// handle input using c.MouseLocal() if needed
+						if (context.hovered && context.mouseButtons[0]) {
+								std::cout << "Panel clicked at local position (" << context.mouseLocal.x << ", " << context.mouseLocal.y << ")\n";
+						}
 				});
 
-		panels.AddPanel({ 400,50, 300,200 },
+		panels.AddPanel({ 400, 50, 300, 200 },
 				[](Canvas& c) {
 						c.FillColor(DARKGRAY);
-						c.DrawRectLines({ 0,0,300,200 }, 2, RAYWHITE);
+						c.DrawRectLines({ 0, 0, 300, 200 }, 2, RAYWHITE);
 						c.DrawTextLocal("Shut up, Panel.", { 12,12 }, 20, RAYWHITE);
 				});
 

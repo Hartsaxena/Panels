@@ -1,7 +1,8 @@
 #pragma once
 
 #include <raylib.h>
-#include <vector>
+#include <unordered_map>
+#include <array>
 #include <span>
 #include <functional>
 
@@ -61,10 +62,11 @@ class Panel
 private:
 		struct PanelContext
 		{
-				Canvas canvas;         // origin-aware drawing & coords
-				Rectangle rect;        // panel rect
-				bool hovered;          // maybe useful
-				Vector2 mouseLocal;    // cached convenience
+				Canvas canvas;          // origin-aware drawing & coords
+				Rectangle rect;         // panel rect
+				bool hovered;           // maybe useful
+				Vector2 mouseLocal;     // cached convenience
+				std::array<bool, 3> mouseButtons{}; // left/middle/right button states
 
 				void refresh(const Panel& panel);
 		};
@@ -74,8 +76,9 @@ public:
 		struct UpdateContext
 		{
 				float dt;            // delta time for smooth movement
-				Vector2 mouseLocal;  // local mouse position
 				bool hovered;        // is mouse over this panel?
+				Vector2 mouseLocal;  // local mouse position
+				std::array<bool, 3> mouseButtons; // left/middle/right button states
 		};
 
 		/// @brief Logic function called every frame. 
@@ -118,27 +121,35 @@ public:
 
 class PanelManager
 {
+private:
+		std::unordered_map<std::string, Panel> m_Panels;
+
 public:
 
 		PanelManager() = default;
+
+		Panel& AddPanel(const std::string& id,
+				Rectangle rect,
+				Panel::DrawFunc OnDraw,
+				Panel::UpdateFunc OnUpdate = {});
 
 		Panel& AddPanel(Rectangle rect,
 				Panel::DrawFunc OnDraw,
 				Panel::UpdateFunc OnUpdate = {});
 
-		Panel& AddPanel(Panel&& panel);
+		Panel& AddPanel(const std::string& id, Panel&& panel);
+		bool RemovePanel(const std::string& id) { return m_Panels.erase(id) > 0; }
 
 		void DrawAll();
 		void UpdateAll();
 
-		// NOTE: std::span instances are invalid the moment m_Panels is changed in any way
-		const std::span<Panel> GetPanels()& { return m_Panels; }
-		const std::span<const Panel> GetPanels() const& { return m_Panels; } // for const PanelManager
+		auto& GetPanels() & { return m_Panels; }
+		const auto& GetPanels() const& { return m_Panels; } // for const PanelManager
+		const Panel& getPanel(const std::string& id) const { return m_Panels.at(id); }
 
-		// forbid calling on rvalues - std::span will be invalid anyways
-		const std::span<Panel> GetPanels() && = delete;
-		const std::span<const Panel> GetPanels() const&& = delete;
+		bool HasPanel(const std::string& id) const { return m_Panels.contains(id); }
 
-private:
-		std::vector<Panel> m_Panels; // ownership
+		// forbid calling on rvalues - references will be invalid anyways
+		decltype(m_Panels)& GetPanels() && = delete;
+		const decltype(m_Panels)& GetPanels() const&& = delete;
 };
