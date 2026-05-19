@@ -22,7 +22,7 @@ int main()
 						c.DrawRectLines({ 0, 0, 300, 200 }, 2, RAYWHITE);
 						c.DrawTextLocal("Hello, Panel!", { 12,12 }, 20, RAYWHITE);
 				},
-				[](Panel::UpdateContext context) {
+				[](Panel::UpdateContext& context) {
 						if (context.hovered && context.mouseButtons[0]) {
 								std::cout << "Panel clicked at local position (" << context.mouseLocal.x << ", " << context.mouseLocal.y << ")\n";
 						}
@@ -42,7 +42,7 @@ int main()
 						c.DrawRectLines({ 0, 0, 300, 200 }, 2, RAYWHITE);
 						c.DrawTextLocal("I have nothing to say.", { 12,12 }, 20, RAYWHITE);
 				},
-				[&panels](Panel::UpdateContext context) {
+				[&panels](Panel::UpdateContext& context) {
 						if (context.hovered && context.mouseButtons[0]) {
 								std::cout << "Destroying panel...\n";
 								panels.RemovePanel("Destroyable Panel");
